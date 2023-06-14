@@ -1,0 +1,2 @@
+# mini-tiktok
+基于微服务RPC框架Kitex和微服务HTTP框架Hertz的极简版抖音后端（第五届字节跳动后端青训营结营项目）
