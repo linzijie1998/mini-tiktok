@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/cloudwego/kitex/pkg/limit"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
@@ -29,7 +28,6 @@ func LoadConfigsAndInit() {
 
 func main() {
 	LoadConfigsAndInit()
-	fmt.Println("init success")
 	r, err := etcd.NewEtcdRegistry([]string{global.Configs.ETCD.Addr()})
 	if err != nil {
 		panic(err)

@@ -167,6 +167,26 @@ func AddPublishInfo(ctx context.Context, uid, vid int64) error {
 	return err
 }
 
+func NewPublishInfo(ctx context.Context, uid int64, vidList []int64) error {
+	key := getPublishKey(uid)
+	pipe := global.RedisClient.Pipeline()
+	if _, err := pipe.Del(ctx, key).Result(); err != nil {
+		return err
+	}
+	for _, vid := range vidList {
+		if _, err := pipe.SAdd(ctx, key, vid).Result(); err != nil {
+			return err
+		}
+	}
+	if _, err := pipe.Exec(ctx); err != nil {
+		// 报错后进行一次额外尝试
+		if _, err = pipe.Exec(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func GetPublishInfo(ctx context.Context, uid int64) ([]int64, error) {
 	var err error
 	key := getPublishKey(uid)
@@ -187,4 +207,44 @@ func GetPublishInfo(ctx context.Context, uid int64) ([]int64, error) {
 func GetFavoriteStatus(ctx context.Context, uid, vid int64) (bool, error) {
 	key := getVideoFavoriteKey(uid)
 	return global.RedisClient.SIsMember(ctx, key, vid).Result()
+}
+
+func GetPublishInfoNullKey(ctx context.Context, uid int64) error {
+	key := getPublishInfoNullKey(uid)
+	return getNullKey(ctx, key)
+}
+
+func DelPublishInfoNullKey(ctx context.Context, uid int64) error {
+	key := getPublishInfoNullKey(uid)
+	return delNullKey(ctx, key)
+}
+
+func AddPublishInfoNullKey(ctx context.Context, uid int64, duration time.Duration) error {
+	key := getPublishInfoNullKey(uid)
+	return addNullKey(ctx, key, duration)
+}
+
+func PushVideoQueue(ctx context.Context, vid int64, maxCap int64) error {
+	pipe := global.RedisClient.Pipeline()
+	length, err := pipe.LLen(ctx, publishQueueKey).Result()
+	if err != nil {
+		return err
+	}
+	if length >= maxCap {
+		for i := 0; i < int(length-maxCap+1); i++ {
+			if _, err := pipe.RPop(ctx, publishQueueKey).Result(); err != nil {
+				return err
+			}
+		}
+	}
+	if _, err = pipe.LPush(ctx, publishQueueKey, vid).Result(); err != nil {
+		return err
+	}
+	if _, err := pipe.Exec(ctx); err != nil {
+		// 报错后进行一次额外尝试
+		if _, err = pipe.Exec(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -20,7 +20,7 @@ func CreateUserInfos(ctx context.Context, userInfos []*model.User) error {
 	return global.GormDB.WithContext(ctx).Create(&userInfos).Error
 }
 
-func QueryUserInfosByID(ctx context.Context, id int64, query string) (*model.User, error) {
+func QueryUserInfoByID(ctx context.Context, id int64, query string) (*model.User, error) {
 	var userInfo *model.User
 	err := global.GormDB.WithContext(ctx).Select(query).Where("id = ?", id).First(&userInfo).Error
 	if err != nil {

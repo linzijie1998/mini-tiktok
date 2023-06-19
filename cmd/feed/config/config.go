@@ -9,5 +9,5 @@ type ServiceConfigs struct {
 	ETCD           config.ETCD           `mapstructure:"etcd" yaml:"etcd"`
 	RPCServer      config.RPCServer      `mapstructure:"rpc_server" yaml:"rpc_server"`
 	StaticResource config.StaticResource `mapstructure:"static_resource" yaml:"static_resource"`
-	Play           config.Play           `mapstructure:"play" yaml:"play"`
+	FileAccess     config.FileAccess     `mapstructure:"file_access" yaml:"file_access"`
 }

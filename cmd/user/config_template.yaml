@@ -1,0 +1,44 @@
+# MySQL数据库连接配置
+mysql:
+  host: ""
+  port: ""
+  db-name: ""
+  username: ""
+  password: ""
+  config: charset=utf8mb4&parseTime=True&loc=Local
+
+# JWT配置
+jwt:
+  signing-key: ""
+  expires-time: ""
+  issuer: ""
+  subject: ""
+
+# Etcd服务注册
+etcd:
+  host: ""
+  port: ""
+
+# RPC服务
+rpc_server:
+  service-name: ""
+  host: ""
+  port: ""
+
+# 静态资源
+static_resource:
+  default-avatar: ""
+  default-background-image: ""
+
+# Redis数据库连接配置
+redis:
+  host: ""
+  port: ""
+  db: ""
+  password: ""
+
+# Redis缓存过期时间
+cache_expire:
+  null-key: "" # 空值缓存
+  user-base-info: ""
+  video-info: ""

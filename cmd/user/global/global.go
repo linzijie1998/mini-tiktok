@@ -5,6 +5,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
 	"gorm.io/gorm"
+	"time"
 )
 
 var (
@@ -12,4 +13,10 @@ var (
 	GormDB      *gorm.DB
 	RedisClient *redis.Client
 	Viper       *viper.Viper
+)
+
+var (
+	ExpireDurationNullKey       time.Duration
+	ExpireDurationUserBaseInfo  time.Duration
+	ExpireDurationVideoBaseInfo time.Duration
 )

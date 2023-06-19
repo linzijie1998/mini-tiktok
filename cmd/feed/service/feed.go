@@ -36,7 +36,7 @@ func (s *FeedService) Feed(req *feed.FeedRequest) ([]*feed.Video, int64, error) 
 		}
 		userId = claims.Id
 	}
-	// 2. 处理latestTime
+	// 2. 处理latestTime, 如果未传值或者传值未0则将时间改为当前时间
 	if req.LatestTime == nil || *req.LatestTime == 0 {
 		latestTime := time.Now().UnixNano() / 1e6
 		req.LatestTime = &latestTime

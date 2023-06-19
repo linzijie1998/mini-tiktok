@@ -9,7 +9,6 @@ type ServiceConfigs struct {
 	ETCD           config.ETCD           `mapstructure:"etcd" yaml:"etcd"`
 	RPCServer      config.RPCServer      `mapstructure:"rpc_server" yaml:"rpc_server"`
 	StaticResource config.StaticResource `mapstructure:"static_resource" yaml:"static_resource"`
-	Upload         config.Upload         `mapstructure:"upload" yaml:"upload"`
-	Play           config.Play           `mapstructure:"play" yaml:"play"`
 	CacheExpire    config.CacheExpire    `mapstructure:"cache_expire" yaml:"cache_expire"`
+	FileAccess     config.FileAccess     `mapstructure:"file_access" yaml:"file_access"`
 }

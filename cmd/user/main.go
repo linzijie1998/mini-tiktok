@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/cloudwego/kitex/pkg/limit"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
@@ -9,8 +10,10 @@ import (
 	"github.com/linzijie1998/mini-tiktok/cmd/user/global"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/initialize"
 	user "github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/user/userservice"
+	"github.com/linzijie1998/mini-tiktok/pkg/path"
 	"log"
 	"net"
+	"os"
 )
 
 //go:generate go env -w GO111MODULE=on
@@ -20,13 +23,20 @@ import (
 
 func LoadConfigsAndInit() {
 	var err error
-	if global.Viper, err = initialize.Viper("/home/nahida/devgo/src/mini-tiktok/cmd/user/config.yaml"); err != nil {
+	if exist, err := path.FileExist("config.yaml"); err != nil || !exist {
+		fmt.Println("未找到配置文件，无法启动服务")
+		os.Exit(0)
+	}
+	if global.Viper, err = initialize.Viper("config.yaml"); err != nil {
 		panic(err)
 	}
 	if global.GormDB, err = initialize.GormMySQL(); err != nil {
 		panic(err)
 	}
 	if global.RedisClient, err = initialize.Redis(); err != nil {
+		panic(err)
+	}
+	if err = initialize.ParseDuration(); err != nil {
 		panic(err)
 	}
 }

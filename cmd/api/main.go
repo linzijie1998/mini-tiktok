@@ -3,11 +3,14 @@
 package main
 
 import (
+	"fmt"
 	"github.com/cloudwego/hertz/pkg/app/server"
 	"github.com/cloudwego/hertz/pkg/network/standard"
 	"github.com/linzijie1998/mini-tiktok/cmd/api/global"
 	"github.com/linzijie1998/mini-tiktok/cmd/api/initialize"
 	"github.com/linzijie1998/mini-tiktok/cmd/api/initialize/rpc"
+	"github.com/linzijie1998/mini-tiktok/pkg/path"
+	"os"
 )
 
 //go:generate go env -w GO111MODULE=on
@@ -17,7 +20,11 @@ import (
 
 func LoadConfigsAndInit() {
 	var err error
-	if global.Viper, err = initialize.Viper("/home/nahida/devgo/src/mini-tiktok/cmd/api/config.yaml"); err != nil {
+	if exist, err := path.FileExist("config.yaml"); err != nil || !exist {
+		fmt.Println("未找到配置文件，无法启动服务")
+		os.Exit(0)
+	}
+	if global.Viper, err = initialize.Viper("config.yaml"); err != nil {
 		panic(err)
 	}
 	if global.UserServiceClient, err = rpc.InitUserRPC(); err != nil {
@@ -51,9 +58,6 @@ func main() {
 		server.WithAltTransport(standard.NewTransporter),
 		server.WithHostPorts(global.Configs.Hertz.Addr()),
 	)
-
-	h.Static("/videos", "/opt/tiktok")
-	h.Static("/covers", "/opt/tiktok")
 
 	register(h)
 	h.Spin()

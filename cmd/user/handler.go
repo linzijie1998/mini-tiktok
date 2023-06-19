@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/pack"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/service"
-	user "github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/user"
+	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/user"
 	"github.com/linzijie1998/mini-tiktok/pkg/errno"
 )
 
@@ -42,7 +42,7 @@ func (s *UserServiceImpl) UserLogin(ctx context.Context, req *user.LoginRequest)
 // UserInfo implements the UserServiceImpl interface.
 func (s *UserServiceImpl) UserInfo(ctx context.Context, req *user.InfoRequest) (*user.InfoResponse, error) {
 	// 1. 检查请求格式是否正确
-	if req.UserId == 0 {
+	if req.UserId <= 0 {
 		return pack.BuildInfoResp(nil, errno.ParamErr), nil
 	}
 	// 2. 处理请求

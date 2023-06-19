@@ -1,7 +1,5 @@
 # 用户微服务RPC服务端
-本服务负责用户的注册（user_register）、登录（user_login）以及用户信息查找（user_info）功能。
-
-## 一、数据设计
+本服务负责用户的注册（user_register）、登录（user_login）以及用户信息查找（user_info）功能
 
 | 序号 | 数据字段名            | 字段描述 | 使用场景                     |
 |----|------------------|------|--------------------------|
@@ -17,6 +15,51 @@
 | 10 | favorite_count   | 点赞数  | 用户的点赞视频计数，在用户主页上显示       |
 | 11 | work_count       | 作品数  | 用户在平台上发布的视频计数，在用户主页上显示   |
 
-## 二、服务逻辑
+参考配置：`config_template.yaml`，启动前修改为`config.yaml`
 
-### 2.1 用户注册
+```yaml
+# MySQL数据库连接配置
+mysql:
+  host: 127.0.0.1
+  port: 3306
+  db-name: tiktok
+  username: root
+  password: 123456
+  config: charset=utf8mb4&parseTime=True&loc=Local
+
+# JWT配置
+jwt:
+  signing-key: bytedance-project
+  expires-time: 168h
+  issuer: linzijie
+  subject: mini-tiktok
+
+# Etcd服务注册
+etcd:
+  host: 127.0.0.1
+  port: 2379
+
+# RPC服务
+rpc_server:
+  service-name: user_service
+  host: 127.0.0.1
+  port: 8880
+
+# 静态资源
+static_resource:
+  default-avatar: ""
+  default-background-image: ""
+
+# Redis数据库连接配置
+redis:
+  host: 127.0.0.1
+  port: 6379
+  db: 0
+  password: ""
+
+# Redis缓存过期时间
+cache_expire:
+  null-key: 30m # 空值缓存
+  user-base-info: 24h
+  video-info: 24h
+```

@@ -19,6 +19,8 @@ require (
 	gorm.io/gorm v1.25.1
 )
 
+require github.com/google/uuid v1.3.0
+
 require (
 	github.com/bytedance/go-tagexpr/v2 v2.9.2 // indirect
 	github.com/bytedance/gopkg v0.0.0-20220817015305-b879a72dc90f // indirect
