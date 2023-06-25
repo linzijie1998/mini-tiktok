@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/dal"
-	"github.com/linzijie1998/mini-tiktok/cmd/user/dal/cache"
+	"github.com/linzijie1998/mini-tiktok/cmd/user/dal/mongo"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/global"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/pack"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/user"
@@ -39,7 +39,8 @@ func (s *UserInfoService) UserInfo(req *user.InfoRequest) (*user.User, error) {
 		}
 		// 判断关注状态
 		if claims.Id != req.UserId {
-			isFollow, err = cache.GetFollowState(s.ctx, claims.Id, req.UserId)
+			isFollow, err = mongo.GetFollowInfo(s.ctx, claims.Id, req.UserId)
+			//isFollow, err = cache.GetFollowState(s.ctx, claims.Id, req.UserId)
 			if err != nil {
 				return nil, err
 			}

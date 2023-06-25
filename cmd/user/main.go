@@ -36,6 +36,9 @@ func LoadConfigsAndInit() {
 	if global.RedisClient, err = initialize.Redis(); err != nil {
 		panic(err)
 	}
+	if global.MongoClient, err = initialize.Mongo(); err != nil {
+		panic(err)
+	}
 	if err = initialize.ParseDuration(); err != nil {
 		panic(err)
 	}

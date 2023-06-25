@@ -11,4 +11,5 @@ type ServiceConfigs struct {
 	StaticResource config.StaticResource `mapstructure:"static_resource" yaml:"static_resource"`
 	CacheExpire    config.CacheExpire    `mapstructure:"cache_expire" yaml:"cache_expire"`
 	FileAccess     config.FileAccess     `mapstructure:"file_access" yaml:"file_access"`
+	MongoDB        config.MongoDB        `mapstructure:"mongodb" yaml:"mongodb"`
 }

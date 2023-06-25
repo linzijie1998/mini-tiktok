@@ -37,6 +37,11 @@ redis:
   db: ""
   password: ""
 
+# 文件上传和访问
+file_access:
+  upload_path: "" # 文件上传路径
+  nginx_url: "" # nginx服务地址 http://127.0.0.1:8081/
+
 # Redis缓存过期时间
 cache_expire:
   null-key: "" # 空值缓存

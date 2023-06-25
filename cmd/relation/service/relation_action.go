@@ -2,11 +2,10 @@ package service
 
 import (
 	"context"
+	"github.com/linzijie1998/mini-tiktok/cmd/relation/dal/mongodb"
 
-	"github.com/linzijie1998/mini-tiktok/cmd/relation/dal/db"
 	"github.com/linzijie1998/mini-tiktok/cmd/relation/global"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/relation"
-	"github.com/linzijie1998/mini-tiktok/model"
 	"github.com/linzijie1998/mini-tiktok/pkg/constant"
 	"github.com/linzijie1998/mini-tiktok/pkg/errno"
 	"github.com/linzijie1998/mini-tiktok/pkg/jwt"
@@ -32,20 +31,9 @@ func (s *RelationActionService) RelationAction(req *relation.ActionRequest) erro
 		return errno.ParamErr
 	}
 	if req.ActionType == constant.RelationActionDo {
-		if err = db.CreateRelationInfos(s.ctx, []*model.Relation{
-			{
-				UserId:       claims.Id,
-				FollowUserId: req.ToUserId,
-			},
-		}); err != nil {
-			return err
-		}
-		return nil
+		return mongodb.AddRelationInfo(s.ctx, claims.Id, req.ToUserId)
 	} else if req.ActionType == constant.RelationActionCancel {
-		if err = db.DeleteRelationInfo(s.ctx, claims.Id, req.ToUserId); err != nil {
-			return err
-		}
-		return nil
+		return mongodb.DeleteRelationInfo(s.ctx, claims.Id, req.ToUserId)
 	} else {
 		return errno.ParamErr
 	}

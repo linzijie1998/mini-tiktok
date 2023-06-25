@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/linzijie1998/mini-tiktok/cmd/publish/dal/cache"
+	"github.com/linzijie1998/mini-tiktok/cmd/publish/dal/mongodb"
 	"github.com/linzijie1998/mini-tiktok/pkg/path"
 	"os"
 	"path/filepath"
@@ -68,6 +69,9 @@ func (s *PublishActionService) PublishAction(req *publish.ActionRequest) error {
 	if err = db.AddPublishInfo(s.ctx, claims.Id, videoInfo); err != nil {
 		return errno.ServiceErr.WithMessage(err.Error())
 	}
+	if err = mongodb.AddPublishInfo(s.ctx, claims.Id, videoInfo.Id); err != nil {
+		return errno.ServiceErr.WithMessage(err.Error())
+	}
 	// 6. 添加缓存信息
 	if err = cache.PushVideoQueue(s.ctx, videoInfo.Id, 30); err != nil {
 		return err
@@ -79,14 +83,15 @@ func (s *PublishActionService) PublishAction(req *publish.ActionRequest) error {
 	if err = cache.NewVideoCounters(s.ctx, []*model.Video{videoInfo}); err != nil {
 		return err
 	}
-	if err = cache.AddPublishInfo(s.ctx, claims.Id, videoInfo.Id); err != nil {
-		return err
-	}
+	//if err = cache.AddPublishInfo(s.ctx, claims.Id, videoInfo.Id); err != nil {
+	//	return err
+	//}
 	if err = cache.IncrWorkCount(s.ctx, claims.Id); err != nil {
 		return err
 	}
 	if err = cache.DelPublishInfoNullKey(s.ctx, claims.Id); err != nil {
 		return err
 	}
+
 	return nil
 }

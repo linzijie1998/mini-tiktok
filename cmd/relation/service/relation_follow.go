@@ -2,15 +2,14 @@ package service
 
 import (
 	"context"
-	"errors"
+	"github.com/linzijie1998/mini-tiktok/cmd/relation/dal"
+	"github.com/linzijie1998/mini-tiktok/cmd/relation/dal/mongodb"
 
-	"github.com/linzijie1998/mini-tiktok/cmd/relation/dal/db"
 	"github.com/linzijie1998/mini-tiktok/cmd/relation/global"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/relation"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/user"
 	"github.com/linzijie1998/mini-tiktok/pkg/errno"
 	"github.com/linzijie1998/mini-tiktok/pkg/jwt"
-	"gorm.io/gorm"
 )
 
 type RelationFollowListService struct {
@@ -29,34 +28,30 @@ func (s *RelationFollowListService) FollowList(req *relation.FollowListRequest) 
 	if claims.Id == 0 || claims.Issuer != global.Configs.JWT.Issuer || claims.Subject != global.Configs.JWT.Subject {
 		return nil, errno.AuthorizationFailedErr
 	}
-	relationInfos, err := db.QueryFollowInfos(s.ctx, req.UserId, "follow_user_id")
+	//relationInfos, err := db.QueryFollowInfos(s.ctx, req.UserId, "follow_user_id")
+	relationInfos, err := mongodb.GetFollowList(s.ctx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
 	userList := make([]*user.User, len(relationInfos))
-	for i, relationInfo := range relationInfos {
-		userInfo, err := db.QueryFirstUserInfoByID(s.ctx, relationInfo.FollowUserId, "nickname")
+	for i, uid := range relationInfos {
+		// 查找用户信息 缓存->db
+		userInfo, err := dal.QueryUserInfoById(s.ctx, uid)
 		if err != nil {
 			return nil, err
 		}
-
+		// 关注状态
 		isFollow := false
 		if claims.Id == req.UserId {
 			isFollow = true
 		} else {
-			err = db.QueryFollowInfo(s.ctx, claims.Id, relationInfo.FollowUserId, "id")
+			isFollow, err = mongodb.GetFollowInfo(s.ctx, claims.Id, req.UserId)
 			if err != nil {
-				if !errors.Is(err, gorm.ErrRecordNotFound) {
-					return nil, err
-				}
-				isFollow = false
-			} else {
-				isFollow = true
+				return nil, err
 			}
 		}
-
 		userList[i] = &user.User{
-			Id:       relationInfo.FollowUserId,
+			Id:       uid,
 			Name:     userInfo.Nickname,
 			IsFollow: isFollow,
 		}

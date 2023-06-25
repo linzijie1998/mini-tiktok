@@ -2,17 +2,15 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
-
-	"github.com/linzijie1998/mini-tiktok/cmd/favorite/dal/db"
+	"github.com/linzijie1998/mini-tiktok/cmd/favorite/dal"
+	"github.com/linzijie1998/mini-tiktok/cmd/favorite/dal/mongodb"
 	"github.com/linzijie1998/mini-tiktok/cmd/favorite/global"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/favorite"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/feed"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/user"
 	"github.com/linzijie1998/mini-tiktok/pkg/errno"
 	"github.com/linzijie1998/mini-tiktok/pkg/jwt"
-	"gorm.io/gorm"
 )
 
 type FavoriteListService struct {
@@ -37,14 +35,13 @@ func (s *FavoriteListService) FavoriteList(req *favorite.ListRequest) ([]*feed.V
 		userId = claims.Id
 	}
 
-	favoriteInfos, err := db.QueryFavoriteInfosByUserId(s.ctx, req.UserId, "video_id")
+	favoriteInfos, err := mongodb.GetFavoriteList(s.ctx, req.UserId)
 	if err != nil {
 		return nil, err
 	}
 	videoList := make([]*feed.Video, len(favoriteInfos))
-	for i, favoriteInfo := range favoriteInfos {
-		videoInfo, err := db.QueryVideoInfoById(s.ctx, favoriteInfo.VideoId,
-			"author_id,  cover_path, favorite_count")
+	for i, vid := range favoriteInfos {
+		videoInfo, err := dal.QueryVideoInfoById(s.ctx, vid)
 		if err != nil {
 			return nil, err
 		}
@@ -53,19 +50,14 @@ func (s *FavoriteListService) FavoriteList(req *favorite.ListRequest) ([]*feed.V
 			if userId == req.UserId {
 				isFavorite = true
 			} else {
-				err = db.QueryFavoriteInfo(s.ctx, userId, favoriteInfo.VideoId)
+				isFavorite, err = mongodb.GetFavoriteInfo(s.ctx, userId, vid)
 				if err != nil {
-					if !errors.Is(err, gorm.ErrRecordNotFound) {
-						return nil, err
-					}
-					isFavorite = false
-				} else {
-					isFavorite = true
+					return nil, err
 				}
 			}
 		}
 		videoList[i] = &feed.Video{
-			Id:            favoriteInfo.VideoId,
+			Id:            vid,
 			Author:        &user.User{Id: videoInfo.AuthorId},
 			CoverUrl:      fmt.Sprintf("%s/%s", global.Configs.Play.CoverURL, videoInfo.CoverPath),
 			FavoriteCount: videoInfo.FavoriteCount,

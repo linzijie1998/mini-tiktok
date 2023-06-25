@@ -2,9 +2,7 @@ package service
 
 import (
 	"context"
-
-	"github.com/linzijie1998/mini-tiktok/cmd/favorite/dal/db"
-	"github.com/linzijie1998/mini-tiktok/model"
+	"github.com/linzijie1998/mini-tiktok/cmd/favorite/dal/mongodb"
 
 	"github.com/linzijie1998/mini-tiktok/cmd/favorite/global"
 
@@ -36,15 +34,9 @@ func (s *FavoriteActionService) FavoriteAction(req *favorite.ActionRequest) erro
 	}
 	// 2.根据ActionType处理请求
 	if req.ActionType == constant.FavoriteActionLike {
-		err = db.AddFavoriteInfo(s.ctx, []*model.Favorite{
-			{
-				UserId:  claims.Id,
-				VideoId: req.VideoId,
-			},
-		})
-		return err
+		return mongodb.AddFavoriteInfo(s.ctx, claims.Id, req.VideoId)
 	} else if req.ActionType == constant.FavoriteActionCancel {
-		return db.DeleteFavoriteInfo(s.ctx, claims.Id, req.VideoId)
+		return mongodb.DeleteFavoriteInfo(s.ctx, claims.Id, req.VideoId)
 	} else {
 		return errno.ParamErr
 	}

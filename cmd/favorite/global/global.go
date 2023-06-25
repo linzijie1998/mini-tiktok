@@ -6,6 +6,7 @@ import (
 	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/mongo"
 	"gorm.io/gorm"
+	"time"
 )
 
 var (
@@ -13,5 +14,11 @@ var (
 	GormDB      *gorm.DB
 	RedisClient *redis.Client
 	Viper       *viper.Viper
-	MongoDB     *mongo.Database
+	MongoClient *mongo.Client
+)
+
+var (
+	ExpireDurationNullKey       time.Duration
+	ExpireDurationUserBaseInfo  time.Duration
+	ExpireDurationVideoBaseInfo time.Duration
 )

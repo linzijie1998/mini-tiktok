@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/linzijie1998/mini-tiktok/cmd/publish/dal"
 	"github.com/linzijie1998/mini-tiktok/cmd/publish/dal/cache"
-	"github.com/linzijie1998/mini-tiktok/cmd/publish/dal/db"
+	"github.com/linzijie1998/mini-tiktok/cmd/publish/dal/mongodb"
 	"github.com/linzijie1998/mini-tiktok/cmd/publish/global"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/feed"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/publish"
@@ -33,23 +33,34 @@ func (s *PublishListService) PublishList(req *publish.ListRequest) ([]*feed.Vide
 	if err = cache.GetPublishInfoNullKey(s.ctx, req.UserId); err == nil {
 		return nil, nil
 	}
-	// 2. 首先在缓存中查找发布的视频vid, 忽略错误
-	vidList, _ := cache.GetPublishInfo(s.ctx, req.UserId)
-	if len(vidList) == 0 {
-		// 缓存未命中, 在db中查找
-		videoInfos, err := db.QueryVideoInfoByUserId(s.ctx, req.UserId, "id")
-		if err != nil {
-			return nil, err
-		}
-		if len(videoInfos) == 0 {
-			_ = cache.AddPublishInfoNullKey(s.ctx, req.UserId, global.ExpireDurationNullKey)
-			return nil, nil
-		}
-		vidList = make([]int64, len(videoInfos))
-		for i, info := range videoInfos {
-			vidList[i] = info.Id
-		}
+	// 2. 查找发布的视频vid
+	vidList, err := mongodb.GetPublishInfo(s.ctx, req.UserId)
+	if err != nil {
+		return nil, err
 	}
+	if len(vidList) == 0 {
+		// 没有发布的视频, 添加空值缓存
+		_ = cache.AddPublishInfoNullKey(s.ctx, req.UserId, global.ExpireDurationNullKey)
+		return nil, nil
+	}
+
+	//vidList, _ := cache.GetPublishInfo(s.ctx, req.UserId)
+	//if len(vidList) == 0 {
+	//	// 缓存未命中, 在db中查找
+	//	videoInfos, err := db.QueryVideoInfoByUserId(s.ctx, req.UserId, "id")
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	if len(videoInfos) == 0 {
+	//		_ = cache.AddPublishInfoNullKey(s.ctx, req.UserId, global.ExpireDurationNullKey)
+	//		return nil, nil
+	//	}
+	//	vidList = make([]int64, len(videoInfos))
+	//	for i, info := range videoInfos {
+	//		vidList[i] = info.Id
+	//	}
+	//}
+
 	//3. 根据vid查找视频信息 缓存->db
 	videoInfos := make([]*model.Video, len(vidList))
 	for i, vid := range vidList {
@@ -78,7 +89,10 @@ func (s *PublishListService) PublishList(req *publish.ListRequest) ([]*feed.Vide
 		res[i].CommentCount = videoInfo.CommentCount
 		res[i].IsFavorite = false
 		if userId != 0 {
-			if res[i].IsFavorite, err = cache.GetFavoriteStatus(s.ctx, userId, videoInfo.Id); err != nil {
+			//if res[i].IsFavorite, err = cache.GetFavoriteStatus(s.ctx, userId, videoInfo.Id); err != nil {
+			//	return nil, err
+			//}
+			if res[i].IsFavorite, err = mongodb.GetFavoriteInfo(s.ctx, userId, videoInfo.Id); err != nil {
 				return nil, err
 			}
 		}
