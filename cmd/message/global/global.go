@@ -2,14 +2,12 @@ package global
 
 import (
 	"github.com/linzijie1998/mini-tiktok/cmd/message/config"
-	"github.com/redis/go-redis/v9"
 	"github.com/spf13/viper"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var (
 	Configs     config.ServiceConfigs
-	GormDB      *gorm.DB
-	RedisClient *redis.Client
+	MongoClient *mongo.Client
 	Viper       *viper.Viper
 )

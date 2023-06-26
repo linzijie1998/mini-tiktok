@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/linzijie1998/mini-tiktok/cmd/message/pack"
 	"github.com/linzijie1998/mini-tiktok/cmd/message/service"
 	message "github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/message"
@@ -27,7 +25,6 @@ func (s *MessageServiceImpl) MessageChat(ctx context.Context, req *message.ChatR
 
 // MessageAction implements the MessageServiceImpl interface.
 func (s *MessageServiceImpl) MessageAction(ctx context.Context, req *message.ActionRequest) (*message.ActionResponse, error) {
-	fmt.Printf("%#v\n", req)
 	if len(req.Token) == 0 || req.ToUserId == 0 {
 		return nil, errno.ParamErr
 	}

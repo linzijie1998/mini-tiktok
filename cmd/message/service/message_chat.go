@@ -2,9 +2,7 @@ package service
 
 import (
 	"context"
-	"sort"
-
-	"github.com/linzijie1998/mini-tiktok/cmd/message/dal/db"
+	"github.com/linzijie1998/mini-tiktok/cmd/message/dal/mongodb"
 	"github.com/linzijie1998/mini-tiktok/cmd/message/global"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/message"
 	"github.com/linzijie1998/mini-tiktok/pkg/errno"
@@ -27,29 +25,37 @@ func (s *MessageChatService) MessageChat(req *message.ChatRequest) ([]*message.M
 	if claims.Id == 0 || claims.Issuer != global.Configs.JWT.Issuer || claims.Subject != global.Configs.JWT.Subject {
 		return nil, errno.AuthorizationFailedErr
 	}
-	messages, err := db.QueryMessageByUserIDAndToUserIDWithLimit(s.ctx, req.ToUserId, claims.Id, req.PreMsgTime, "id, from_user_id, to_user_id, content, create_date")
-	if err != nil {
-		return nil, err
-	}
+
 	if req.PreMsgTime == 0 {
-		// 查询发送给对方的消息
-		sendMessages, err := db.QueryMessageByUserIDAndToUserIDWithLimit(s.ctx, claims.Id, req.ToUserId, req.PreMsgTime, "id, from_user_id, to_user_id, content, create_date")
+		// 查询所有聊天记录
+		messages, err := mongodb.GetAllMessages(s.ctx, claims.Id, req.ToUserId)
 		if err != nil {
 			return nil, err
 		}
-		messages = append(sendMessages, messages...)
+		messageList := make([]*message.Message, len(messages))
+		for i, mongoMessage := range messages {
+			messageList[i] = &message.Message{
+				Id:         int64(i + 10),
+				ToUserId:   mongoMessage.Receiver,
+				FromUserId: mongoMessage.Sender,
+				Content:    mongoMessage.Content,
+				CreateTime: &mongoMessage.Timestamp,
+			}
+		}
+		return messageList, nil
 	}
-	sort.Slice(messages, func(i, j int) bool {
-		return (messages[i].CreatedAt).Before(messages[j].CreatedAt)
-	})
+	messages, err := mongodb.GetReceiveMessageWithLimit(s.ctx, req.ToUserId, claims.Id, req.PreMsgTime)
+	if err != nil {
+		return nil, err
+	}
 	messageList := make([]*message.Message, len(messages))
-	for i, msg := range messageList {
+	for i, mongoMessage := range messages {
 		messageList[i] = &message.Message{
-			Id:         msg.Id,
-			FromUserId: msg.FromUserId,
-			ToUserId:   msg.ToUserId,
-			Content:    msg.Content,
-			CreateDate: msg.CreateDate,
+			Id:         int64(i + 100),
+			ToUserId:   mongoMessage.Receiver,
+			FromUserId: mongoMessage.Sender,
+			Content:    mongoMessage.Content,
+			CreateTime: &mongoMessage.Timestamp,
 		}
 	}
 	return messageList, nil

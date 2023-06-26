@@ -6,7 +6,7 @@ struct Message {
     2: required i64 to_user_id,
     3: required i64 from_user_id,
     4: required string content,
-    5: optional string create_date,
+    5: optional i64 create_time,
 }
 
 struct ChatRequest {

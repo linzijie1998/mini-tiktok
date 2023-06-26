@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
+	"github.com/linzijie1998/mini-tiktok/cmd/message/dal/mongodb"
 	"time"
 
-	"github.com/linzijie1998/mini-tiktok/cmd/message/dal/db"
 	"github.com/linzijie1998/mini-tiktok/cmd/message/global"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/message"
 	"github.com/linzijie1998/mini-tiktok/model"
@@ -32,14 +32,11 @@ func (s *MessageActionService) MessageAction(req *message.ActionRequest) error {
 	if req.ActionType != constant.MessageChatTypeSend {
 		return errno.ParamErr
 	}
-	newMessage := &model.Message{
-		ToUserId:   req.ToUserId,
-		FromUserId: claims.Id,
-		Content:    req.Content,
-		CreateTime: time.Now().Format("2006/01/02 15:04:05"),
+	newMessage := &model.MongoMessage{
+		Receiver:  req.ToUserId,
+		Sender:    claims.Id,
+		Content:   req.Content,
+		Timestamp: time.Now().UnixNano() / 1e6,
 	}
-	if err = db.CreateMessageInfos(s.ctx, []*model.Message{newMessage}); err != nil {
-		return err
-	}
-	return nil
+	return mongodb.AddMessageInfo(s.ctx, newMessage)
 }

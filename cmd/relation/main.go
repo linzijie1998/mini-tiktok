@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
+	"github.com/linzijie1998/mini-tiktok/pkg/path"
 	"log"
 	"net"
+	"os"
 
 	"github.com/cloudwego/kitex/pkg/limit"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
@@ -16,10 +19,20 @@ import (
 
 func LoadConfigsAndInit() {
 	var err error
-	if global.Viper, err = initialize.Viper("config.yaml"); err != nil {
+	if exist, err := path.FileExist("/home/nahida/devgo/src/mini-tiktok/cmd/relation/config.yaml"); err != nil || !exist {
+		fmt.Println("未找到配置文件，无法启动服务")
+		os.Exit(0)
+	}
+	if global.Viper, err = initialize.Viper("/home/nahida/devgo/src/mini-tiktok/cmd/relation/config.yaml"); err != nil {
 		panic(err)
 	}
 	if global.GormDB, err = initialize.GormMySQL(); err != nil {
+		panic(err)
+	}
+	if global.RedisClient, err = initialize.Redis(); err != nil {
+		panic(err)
+	}
+	if global.MongoClient, err = initialize.Mongo(); err != nil {
 		panic(err)
 	}
 }

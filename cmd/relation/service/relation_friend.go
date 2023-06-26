@@ -4,14 +4,13 @@ import (
 	"context"
 	"errors"
 	"github.com/linzijie1998/mini-tiktok/cmd/relation/dal"
-	"github.com/linzijie1998/mini-tiktok/cmd/relation/dal/db"
 	"github.com/linzijie1998/mini-tiktok/cmd/relation/dal/mongodb"
 	"github.com/linzijie1998/mini-tiktok/cmd/relation/global"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/relation"
 	"github.com/linzijie1998/mini-tiktok/pkg/constant"
 	"github.com/linzijie1998/mini-tiktok/pkg/errno"
 	"github.com/linzijie1998/mini-tiktok/pkg/jwt"
-	"gorm.io/gorm"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type RelationFriendListService struct {
@@ -42,26 +41,19 @@ func (s *RelationFriendListService) FriendList(req *relation.FriendListRequest) 
 		}
 		message := "暂无聊天消息"
 		msgType := constant.MessageTypeReceived
-		latestSendMsgInfo, err := db.QueryLatestMessage(s.ctx, req.UserId, uid, "content, created_at")
+		latestMessage, err := mongodb.GetLatestMessage(s.ctx, req.UserId, uid)
 		if err != nil {
-			if !errors.Is(err, gorm.ErrRecordNotFound) {
+			if !errors.Is(err, mongo.ErrNoDocuments) {
 				return nil, err
 			}
-		} else {
-			message = latestSendMsgInfo.Content
-			msgType = constant.MessageTypeSend
 		}
-		latestReceivedMsgInfo, err := db.QueryLatestMessage(s.ctx, uid, req.UserId, "content, created_at")
-		if err != nil {
-			if !errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, err
-			}
-		} else {
-			if latestReceivedMsgInfo.CreatedAt.After(latestSendMsgInfo.CreatedAt) {
-				message = latestReceivedMsgInfo.Content
-				msgType = constant.MessageTypeReceived
+		if latestMessage != nil {
+			message = latestMessage.Content
+			if latestMessage.Receiver == req.UserId {
+				msgType = constant.MessageTypeSend
 			}
 		}
+
 		userList[i] = &relation.FriendUser{
 			Id:      userInfo.Id,
 			Name:    userInfo.Nickname,

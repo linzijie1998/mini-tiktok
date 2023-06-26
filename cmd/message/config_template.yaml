@@ -1,0 +1,25 @@
+# JWT配置
+jwt:
+  signing-key: ""
+  expires-time: ""
+  issuer: ""
+  subject: ""
+
+# ETCD注册服务
+etcd:
+  host: ""
+  port: ""
+
+# RPC微服务配置
+rpc_server:
+  service-name: ""
+  host: ""
+  port: ""
+
+# MongoDB数据库连接配置
+mongodb:
+  host: ""
+  port: ""
+  username: ""
+  password: ""
+  database: ""
