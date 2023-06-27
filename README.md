@@ -1,4 +1,4 @@
-# 【mini-tiktok】极简版抖音
+# 极简版抖音
 
 <div align=left>
 <img src="https://img.shields.io/badge/Golang-v1.19-blue"/>
