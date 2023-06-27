@@ -3,13 +3,18 @@ package cache
 import (
 	"context"
 	"fmt"
-	"github.com/linzijie1998/mini-tiktok/cmd/favorite/global"
+	"github.com/linzijie1998/mini-tiktok/cmd/feed/global"
 	"github.com/linzijie1998/mini-tiktok/pkg/errno"
 	"strconv"
 	"time"
 )
 
 const (
+	userInfoKey        = "user_info_uid%d"
+	userCounterKey     = "user_counter_uid%d"
+	followInfoKey      = "relation_follow_uid%d"
+	userInfoNullKey    = "user_null_uid%d"
+	userLoginNullKey   = "user_null_username_%s"
 	videoInfoKey       = "video_info_vid%d"
 	videoCounterKey    = "video_counter_vid%d"
 	publishKey         = "publish_uid%d"
@@ -18,20 +23,24 @@ const (
 	publishQueueKey    = "publish_queue"
 )
 
-func getPublishInfoNullKey(uid int64) string {
-	return fmt.Sprintf(publishInfoNullKey, uid)
+func getUserInfoKey(uid int64) string {
+	return fmt.Sprintf(userInfoKey, uid)
 }
 
-func getVideoInfoKey(vid int64) string {
-	return fmt.Sprintf(videoInfoKey, vid)
+func getUserCounterKey(uid int64) string {
+	return fmt.Sprintf(userCounterKey, uid)
 }
 
-func getVideoCounterKey(vid int64) string {
-	return fmt.Sprintf(videoCounterKey, vid)
+func getFollowInfoKey(uid int64) string {
+	return fmt.Sprintf(followInfoKey, uid)
 }
 
-func getPublishKey(uid int64) string {
-	return fmt.Sprintf(publishKey, uid)
+func getUserInfoNullKey(uid int64) string {
+	return fmt.Sprintf(userInfoNullKey, uid)
+}
+
+func getUserLoginNullKey(username string) string {
+	return fmt.Sprintf(userLoginNullKey, username)
 }
 
 func addNullKey(ctx context.Context, key string, duration time.Duration) error {
@@ -47,6 +56,22 @@ func getNullKey(ctx context.Context, key string) error {
 func delNullKey(ctx context.Context, key string) error {
 	_, err := global.RedisClient.Del(ctx, key).Result()
 	return err
+}
+
+func getPublishInfoNullKey(uid int64) string {
+	return fmt.Sprintf(publishInfoNullKey, uid)
+}
+
+func getVideoInfoKey(vid int64) string {
+	return fmt.Sprintf(videoInfoKey, vid)
+}
+
+func getVideoCounterKey(vid int64) string {
+	return fmt.Sprintf(videoCounterKey, vid)
+}
+
+func getPublishKey(uid int64) string {
+	return fmt.Sprintf(publishKey, uid)
 }
 
 func getVideoFavoriteKey(uid int64) string {

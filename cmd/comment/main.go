@@ -27,7 +27,6 @@ func LoadConfigsAndInit() {
 	if global.GormDB, err = initialize.GormMySQL(); err != nil {
 		panic(err)
 	}
-
 }
 
 func main() {

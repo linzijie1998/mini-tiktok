@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/linzijie1998/mini-tiktok/cmd/favorite/dal/cache"
 	"github.com/linzijie1998/mini-tiktok/cmd/favorite/dal/mongodb"
 
 	"github.com/linzijie1998/mini-tiktok/cmd/favorite/global"
@@ -34,10 +35,21 @@ func (s *FavoriteActionService) FavoriteAction(req *favorite.ActionRequest) erro
 	}
 	// 2.根据ActionType处理请求
 	if req.ActionType == constant.FavoriteActionLike {
-		return mongodb.AddFavoriteInfo(s.ctx, claims.Id, req.VideoId)
+		if err := mongodb.AddFavoriteInfo(s.ctx, claims.Id, req.VideoId); err != nil {
+			return err
+		}
+		if err := cache.IncrFavoriteCount(s.ctx, req.VideoId); err != nil {
+			return err
+		}
 	} else if req.ActionType == constant.FavoriteActionCancel {
-		return mongodb.DeleteFavoriteInfo(s.ctx, claims.Id, req.VideoId)
+		if err := mongodb.DeleteFavoriteInfo(s.ctx, claims.Id, req.VideoId); err != nil {
+			return err
+		}
+		if err := cache.DecrFavoriteCount(s.ctx, req.VideoId); err != nil {
+			return err
+		}
 	} else {
 		return errno.ParamErr
 	}
+	return nil
 }

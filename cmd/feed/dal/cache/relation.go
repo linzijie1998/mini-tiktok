@@ -2,7 +2,7 @@ package cache
 
 import (
 	"context"
-	"github.com/linzijie1998/mini-tiktok/cmd/user/global"
+	"github.com/linzijie1998/mini-tiktok/cmd/feed/global"
 )
 
 func GetFollowState(ctx context.Context, uid, followUid int64) (bool, error) {

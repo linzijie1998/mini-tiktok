@@ -2,7 +2,7 @@ package initialize
 
 import (
 	"context"
-	"github.com/linzijie1998/mini-tiktok/cmd/favorite/global"
+	"github.com/linzijie1998/mini-tiktok/cmd/feed/global"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )

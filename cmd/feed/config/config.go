@@ -10,4 +10,6 @@ type ServiceConfigs struct {
 	RPCServer      config.RPCServer      `mapstructure:"rpc_server" yaml:"rpc_server"`
 	StaticResource config.StaticResource `mapstructure:"static_resource" yaml:"static_resource"`
 	FileAccess     config.FileAccess     `mapstructure:"file_access" yaml:"file_access"`
+	MongoDB        config.MongoDB        `mapstructure:"mongodb" yaml:"mongodb"`
+	CacheExpire    config.CacheExpire    `mapstructure:"cache_expire" yaml:"cache_expire"`
 }

@@ -1,11 +1,11 @@
 package initialize
 
 import (
-	"github.com/linzijie1998/mini-tiktok/cmd/user/global"
+	"github.com/linzijie1998/mini-tiktok/cmd/feed/global"
 	"time"
 )
 
-func parseDuration() error {
+func ParseDuration() error {
 	var err error
 	global.ExpireDurationNullKey, err = time.ParseDuration(global.Configs.CacheExpire.NullKey)
 	if err != nil {

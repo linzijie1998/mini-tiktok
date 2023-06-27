@@ -2,17 +2,16 @@ package service
 
 import (
 	"context"
-	"errors"
-	"time"
-
+	"github.com/linzijie1998/mini-tiktok/cmd/feed/dal"
 	"github.com/linzijie1998/mini-tiktok/cmd/feed/dal/db"
+	"github.com/linzijie1998/mini-tiktok/cmd/feed/dal/mongodb"
 	"github.com/linzijie1998/mini-tiktok/cmd/feed/global"
 	"github.com/linzijie1998/mini-tiktok/cmd/feed/pack"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/feed"
 	"github.com/linzijie1998/mini-tiktok/pkg/constant"
 	"github.com/linzijie1998/mini-tiktok/pkg/errno"
 	"github.com/linzijie1998/mini-tiktok/pkg/jwt"
-	"gorm.io/gorm"
+	"time"
 )
 
 type FeedService struct {
@@ -42,46 +41,31 @@ func (s *FeedService) Feed(req *feed.FeedRequest) ([]*feed.Video, int64, error) 
 		req.LatestTime = &latestTime
 	}
 	// 3. 根据latestTime查询视频信息
-	videoInfos, err := db.QueryVideoInfoWithLimit(
-		s.ctx,
-		constant.MaxQueryVideoNum,
-		time.Unix(*req.LatestTime/1e3, *req.LatestTime/1e3),
-		"id, author_id, title, video_path, cover_path, favorite_count, comment_count",
-	)
+	limit := time.Unix(*req.LatestTime/1e3, *req.LatestTime/1e3)
+	videoInfos, err := db.QueryVideoInfoWithLimit(s.ctx, constant.MaxQueryVideoNum, limit, "id")
 	if err != nil {
 		return nil, 0, err
 	}
 	// 4. 查询视频作者用户信息和关注状态以及视频是否点赞
 	videoList := make([]*feed.Video, len(videoInfos))
 	for i, videoInfo := range videoInfos {
-		userInfo, err := db.QueryFirstUserInfoByID(
-			s.ctx,
-			videoInfo.AuthorId,
-			"id, nickname, avatar, background_image, signature, follow_count, follower_count, total_favorited, favorite_count, work_count",
-		)
+		videoInfo, err := dal.QueryVideoInfoById(s.ctx, videoInfo.Id)
 		if err != nil {
 			return nil, 0, err
 		}
+
+		userInfo, err := dal.QueryUserInfoById(s.ctx, videoInfo.AuthorId)
+		if err != nil {
+			return nil, 0, err
+		}
+
 		var isFavorite, isFollow bool
 		if userId != 0 {
-			err = db.QueryFavoriteInfo(s.ctx, userId, videoInfo.Id)
-			if err != nil {
-				if !errors.Is(err, gorm.ErrRecordNotFound) {
-					return nil, 0, err
-				}
-				isFavorite = false
-			} else {
-				isFavorite = true
+			if isFavorite, err = mongodb.GetFavoriteInfo(s.ctx, userId, videoInfo.Id); err != nil {
+				return nil, 0, err
 			}
-
-			err = db.QueryFollowInfo(s.ctx, userId, videoInfo.AuthorId, "id")
-			if err != nil {
-				if !errors.Is(err, gorm.ErrRecordNotFound) {
-					return nil, 0, err
-				}
-				isFollow = false
-			} else {
-				isFollow = true
+			if isFollow, err = mongodb.GetFollowInfo(s.ctx, userId, videoInfo.AuthorId); err != nil {
+				return nil, 0, err
 			}
 		}
 

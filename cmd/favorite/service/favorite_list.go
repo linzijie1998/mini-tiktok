@@ -59,7 +59,7 @@ func (s *FavoriteListService) FavoriteList(req *favorite.ListRequest) ([]*feed.V
 		videoList[i] = &feed.Video{
 			Id:            vid,
 			Author:        &user.User{Id: videoInfo.AuthorId},
-			CoverUrl:      fmt.Sprintf("%s/%s", global.Configs.Play.CoverURL, videoInfo.CoverPath),
+			CoverUrl:      fmt.Sprintf("%s/%s", global.Configs.FileAccess.NginxUrl, videoInfo.CoverPath),
 			FavoriteCount: videoInfo.FavoriteCount,
 			IsFavorite:    isFavorite,
 		}

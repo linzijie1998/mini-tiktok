@@ -39,9 +39,6 @@ func LoadConfigsAndInit() {
 	if global.MongoClient, err = initialize.Mongo(); err != nil {
 		panic(err)
 	}
-	if err = initialize.ParseDuration(); err != nil {
-		panic(err)
-	}
 }
 
 func main() {

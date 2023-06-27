@@ -15,5 +15,8 @@ func Viper(path string) (*viper.Viper, error) {
 	if err := v.Unmarshal(&global.Configs); err != nil {
 		return nil, err
 	}
+	if err := parseDuration(); err != nil {
+		return nil, err
+	}
 	return v, nil
 }

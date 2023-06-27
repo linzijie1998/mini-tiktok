@@ -2,7 +2,6 @@ package initialize
 
 import (
 	"context"
-
 	"github.com/linzijie1998/mini-tiktok/cmd/feed/global"
 	"github.com/redis/go-redis/v9"
 )

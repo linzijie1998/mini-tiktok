@@ -21,13 +21,17 @@ import (
 
 func LoadConfigsAndInit() {
 	var err error
-	if global.Viper, err = initialize.Viper("config.yaml"); err != nil {
+	configPath := "/home/nahida/devgo/src/mini-tiktok/cmd/favorite/config.yaml"
+	if global.Viper, err = initialize.Viper(configPath); err != nil {
 		panic(err)
 	}
 	if global.GormDB, err = initialize.GormMySQL(); err != nil {
 		panic(err)
 	}
 	if global.RedisClient, err = initialize.Redis(); err != nil {
+		panic(err)
+	}
+	if global.MongoClient, err = initialize.Mongo(); err != nil {
 		panic(err)
 	}
 }

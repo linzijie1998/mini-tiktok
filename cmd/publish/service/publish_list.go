@@ -44,23 +44,6 @@ func (s *PublishListService) PublishList(req *publish.ListRequest) ([]*feed.Vide
 		return nil, nil
 	}
 
-	//vidList, _ := cache.GetPublishInfo(s.ctx, req.UserId)
-	//if len(vidList) == 0 {
-	//	// 缓存未命中, 在db中查找
-	//	videoInfos, err := db.QueryVideoInfoByUserId(s.ctx, req.UserId, "id")
-	//	if err != nil {
-	//		return nil, err
-	//	}
-	//	if len(videoInfos) == 0 {
-	//		_ = cache.AddPublishInfoNullKey(s.ctx, req.UserId, global.ExpireDurationNullKey)
-	//		return nil, nil
-	//	}
-	//	vidList = make([]int64, len(videoInfos))
-	//	for i, info := range videoInfos {
-	//		vidList[i] = info.Id
-	//	}
-	//}
-
 	//3. 根据vid查找视频信息 缓存->db
 	videoInfos := make([]*model.Video, len(vidList))
 	for i, vid := range vidList {

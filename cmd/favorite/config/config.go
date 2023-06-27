@@ -10,5 +10,5 @@ type ServiceConfigs struct {
 	RPCServer      config.RPCServer      `mapstructure:"rpc_server" yaml:"rpc_server"`
 	StaticResource config.StaticResource `mapstructure:"static_resource" yaml:"static_resource"`
 	MongoDB        config.MongoDB        `mapstructure:"mongodb" yaml:"mongodb"`
-	Play           config.Play           `mapstructure:"play" yaml:"play"`
+	FileAccess     config.FileAccess     `mapstructure:"file_access" yaml:"file_access"`
 }

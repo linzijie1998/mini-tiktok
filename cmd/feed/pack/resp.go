@@ -3,7 +3,6 @@ package pack
 import (
 	"errors"
 	"fmt"
-
 	"github.com/linzijie1998/mini-tiktok/cmd/feed/global"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/feed"
 	"github.com/linzijie1998/mini-tiktok/kitex_gen/douyin/user"

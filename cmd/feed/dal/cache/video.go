@@ -3,7 +3,7 @@ package cache
 import (
 	"context"
 	"errors"
-	"github.com/linzijie1998/mini-tiktok/cmd/favorite/global"
+	"github.com/linzijie1998/mini-tiktok/cmd/feed/global"
 	"github.com/linzijie1998/mini-tiktok/model"
 	"strconv"
 	"time"
@@ -64,6 +64,38 @@ func buildVideoCounterMap(video *model.Video) map[string]interface{} {
 		"favorite_count": video.FavoriteCount,
 		"comment_count":  video.CommentCount,
 	}
+}
+
+func parseVideoCounter(videoCounterMap map[string]string) (*model.Video, error) {
+	videoInfo := new(model.Video)
+	if value, ok := videoCounterMap["id"]; ok {
+		parseInt, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		videoInfo.Id = parseInt
+	} else {
+		return nil, errors.New("missing field")
+	}
+	if value, ok := videoCounterMap["favorite_count"]; ok {
+		parseInt, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		videoInfo.FavoriteCount = parseInt
+	} else {
+		return nil, errors.New("missing field")
+	}
+	if value, ok := videoCounterMap["comment_count"]; ok {
+		parseInt, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		videoInfo.CommentCount = parseInt
+	} else {
+		return nil, errors.New("missing field")
+	}
+	return videoInfo, nil
 }
 
 func NewVideoInfos(ctx context.Context, videos []*model.Video, duration time.Duration) error {
@@ -129,20 +161,90 @@ func GetVideoCounter(ctx context.Context, vid int64) (*model.Video, error) {
 	return parseVideoInfo(videoCounterMap)
 }
 
-func incrByVideoField(ctx context.Context, vid int64, field string) error {
-	key := getVideoCounterKey(vid)
-	return change(ctx, key, field, 1)
+func AddPublishInfo(ctx context.Context, uid, vid int64) error {
+	key := getPublishKey(uid)
+	_, err := global.RedisClient.SAdd(ctx, key, vid).Result()
+	return err
 }
 
-func IncrFavoriteCount(ctx context.Context, vid int64) error {
-	return incrByVideoField(ctx, vid, "favorite_count")
+func NewPublishInfo(ctx context.Context, uid int64, vidList []int64) error {
+	key := getPublishKey(uid)
+	pipe := global.RedisClient.Pipeline()
+	if _, err := pipe.Del(ctx, key).Result(); err != nil {
+		return err
+	}
+	for _, vid := range vidList {
+		if _, err := pipe.SAdd(ctx, key, vid).Result(); err != nil {
+			return err
+		}
+	}
+	if _, err := pipe.Exec(ctx); err != nil {
+		// 报错后进行一次额外尝试
+		if _, err = pipe.Exec(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func decrByVideoField(ctx context.Context, vid int64, field string) error {
-	key := getVideoCounterKey(vid)
-	return change(ctx, key, field, -1)
+func GetPublishInfo(ctx context.Context, uid int64) ([]int64, error) {
+	var err error
+	key := getPublishKey(uid)
+	result, err := global.RedisClient.SMembers(ctx, key).Result()
+	if err != nil {
+		return nil, err
+	}
+	vidList := make([]int64, len(result))
+	for i, val := range result {
+		vidList[i], err = strconv.ParseInt(val, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return vidList, nil
 }
 
-func DecrFavoriteCount(ctx context.Context, vid int64) error {
-	return decrByVideoField(ctx, vid, "favorite_count")
+func GetFavoriteStatus(ctx context.Context, uid, vid int64) (bool, error) {
+	key := getVideoFavoriteKey(uid)
+	return global.RedisClient.SIsMember(ctx, key, vid).Result()
+}
+
+func GetPublishInfoNullKey(ctx context.Context, uid int64) error {
+	key := getPublishInfoNullKey(uid)
+	return getNullKey(ctx, key)
+}
+
+func DelPublishInfoNullKey(ctx context.Context, uid int64) error {
+	key := getPublishInfoNullKey(uid)
+	return delNullKey(ctx, key)
+}
+
+func AddPublishInfoNullKey(ctx context.Context, uid int64, duration time.Duration) error {
+	key := getPublishInfoNullKey(uid)
+	return addNullKey(ctx, key, duration)
+}
+
+func PushVideoQueue(ctx context.Context, vid int64, maxCap int64) error {
+	pipe := global.RedisClient.Pipeline()
+	length, err := pipe.LLen(ctx, publishQueueKey).Result()
+	if err != nil {
+		return err
+	}
+	if length >= maxCap {
+		for i := 0; i < int(length-maxCap+1); i++ {
+			if _, err := pipe.RPop(ctx, publishQueueKey).Result(); err != nil {
+				return err
+			}
+		}
+	}
+	if _, err = pipe.LPush(ctx, publishQueueKey, vid).Result(); err != nil {
+		return err
+	}
+	if _, err := pipe.Exec(ctx); err != nil {
+		// 报错后进行一次额外尝试
+		if _, err = pipe.Exec(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
 }
