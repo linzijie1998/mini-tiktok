@@ -29,7 +29,7 @@ mysql:
 
 # JWT配置
 jwt:
-  signing-key: bytedance-project
+  signing-key: bytedance-camp
   expires-time: 168h
   issuer: linzijie
   subject: mini-tiktok
@@ -47,8 +47,8 @@ rpc_server:
 
 # 静态资源
 static_resource:
-  default-avatar: ""
-  default-background-image: ""
+  default-avatar: https://imgse.com/i/p912u5V
+  default-background-image: https://imgse.com/i/p912VDs
 
 # Redis数据库连接配置
 redis:
@@ -62,4 +62,12 @@ cache_expire:
   null-key: 30m # 空值缓存
   user-base-info: 24h
   video-info: 24h
+
+# MongoDB数据库连接配置
+mongodb:
+  host: 127.0.0.1
+  port: 27017
+  username: admin
+  password: 123456
+  database: tiktok
 ```
