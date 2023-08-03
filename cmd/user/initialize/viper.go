@@ -5,18 +5,18 @@ import (
 	"github.com/spf13/viper"
 )
 
-func Viper(path string) (*viper.Viper, error) {
+func Viper(path string) error {
 	v := viper.New()
 	v.SetConfigFile(path)
 	v.SetConfigType("yaml")
 	if err := v.ReadInConfig(); err != nil {
-		return nil, err
+		return err
 	}
 	if err := v.Unmarshal(&global.Configs); err != nil {
-		return nil, err
+		return err
 	}
 	if err := parseDuration(); err != nil {
 		panic(err)
 	}
-	return v, nil
+	return nil
 }

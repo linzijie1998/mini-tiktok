@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/cloudwego/kitex/pkg/limit"
 	"github.com/cloudwego/kitex/pkg/rpcinfo"
 	"github.com/cloudwego/kitex/server"
@@ -12,7 +13,7 @@ import (
 	"github.com/linzijie1998/mini-tiktok/pkg/bound"
 	"github.com/linzijie1998/mini-tiktok/pkg/middleware"
 	"github.com/linzijie1998/mini-tiktok/pkg/path"
-	"log"
+	trace_ "github.com/linzijie1998/mini-tiktok/pkg/tracer"
 	"net"
 )
 
@@ -24,34 +25,35 @@ import (
 func LoadConfigsAndInit() {
 	var err error
 	if exist, err := path.FileExist("config.yaml"); err != nil || !exist {
-		log.Fatal("未找到配置文件，无法启动服务")
+		klog.Fatalf("config file not found: %v\n", err)
 	}
-	if global.Viper, err = initialize.Viper("config.yaml"); err != nil {
-		log.Fatal(err)
+	if err = initialize.Viper("config.yaml"); err != nil {
+		klog.Fatalf("parse config file failed: %v\n", err)
 	}
 	if global.GormDB, err = initialize.GormMySQL(); err != nil {
-		log.Fatal(err)
+		klog.Fatalf("init mysql connection failed: %v\n", err)
 	}
 	if global.RedisClient, err = initialize.Redis(); err != nil {
-		log.Fatal(err)
+		klog.Fatalf("init redis connection failed: %v\n", err)
 	}
 	if global.MongoClient, err = initialize.Mongo(); err != nil {
-		log.Fatal(err)
+		klog.Fatalf("init mongodb connection failed: %v\n", err)
 	}
 }
 
 func main() {
-	// 加载配置文件并且初始化
-	LoadConfigsAndInit()
+	// 初始化准备
+	LoadConfigsAndInit()                                    // 加载配置文件并且初始化
+	trace_.InitJaeger(global.Configs.RPCServer.ServiceName) // Jaeger-tracing
 	// etcd 服务注册
 	r, err := etcd.NewEtcdRegistry([]string{global.Configs.ETCD.Addr()})
 	if err != nil {
-		log.Fatal(err)
+		klog.Fatalf("new etcd registry failed: %v\n", err)
 	}
 	// 微服务地址
 	addr, err := net.ResolveTCPAddr("tcp", global.Configs.RPCServer.Addr())
 	if err != nil {
-		log.Fatal(err)
+		klog.Fatalf("resolve tcp address failed: %v\n", err)
 	}
 	// 微服务定义
 	svr := user.NewServer(new(UserServiceImpl),
@@ -80,6 +82,6 @@ func main() {
 	)
 	// 启动服务
 	if err = svr.Run(); err != nil {
-		log.Fatal(err)
+		klog.Fatalf("can not run server: %v\n", err)
 	}
 }
