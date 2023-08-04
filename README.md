@@ -4,7 +4,7 @@
 <img src="https://img.shields.io/badge/Golang-v1.19-blue"/>
 <img src="https://img.shields.io/badge/Hertz-v0.6.2-lightBlue"/>
 <img src="https://img.shields.io/badge/Kitex-v0.5.2-red"/>
-<img src="https://img.shields.io/badge/LICENSE-MIT-green"/>
+<img src="https://img.shields.io/badge/LICENSE-Apache 2.0-green"/>
 </div>
 
 

@@ -10,7 +10,6 @@ import (
 const (
 	userInfoKey      = "user_info_uid%d"
 	userCounterKey   = "user_counter_uid%d"
-	followInfoKey    = "relation_follow_uid%d"
 	userInfoNullKey  = "user_null_uid%d"
 	userLoginNullKey = "user_null_username_%s"
 )
@@ -21,10 +20,6 @@ func getUserInfoKey(uid int64) string {
 
 func getUserCounterKey(uid int64) string {
 	return fmt.Sprintf(userCounterKey, uid)
-}
-
-func getFollowInfoKey(uid int64) string {
-	return fmt.Sprintf(followInfoKey, uid)
 }
 
 func getUserInfoNullKey(uid int64) string {

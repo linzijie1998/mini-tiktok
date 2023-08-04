@@ -16,7 +16,6 @@ var (
 )
 
 var (
-	ExpireDurationNullKey       time.Duration
-	ExpireDurationUserBaseInfo  time.Duration
-	ExpireDurationVideoBaseInfo time.Duration
+	ExpireDurationNullKey      time.Duration // 空值缓存过期时间
+	ExpireDurationUserBaseInfo time.Duration // 用户基本信息缓存过期时间
 )

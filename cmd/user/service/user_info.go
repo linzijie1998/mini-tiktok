@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/dal"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/dal/mongo"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/global"
@@ -23,6 +24,7 @@ func (s *UserInfoService) UserInfo(req *user.InfoRequest) (*user.User, error) {
 	// 根据uid查询用户信息
 	userInfo, err := dal.QueryUserInfoById(s.ctx, req.UserId)
 	if err != nil {
+		// 错误信息已经处理，可直接返回
 		return nil, err
 	}
 	// 解析token, 判断关注状态
@@ -31,7 +33,8 @@ func (s *UserInfoService) UserInfo(req *user.InfoRequest) (*user.User, error) {
 		// 解析token
 		claims, err := jwt.NewJWT(global.Configs.JWT.SigningKey).ParseToken(req.Token)
 		if err != nil {
-			return nil, err
+			klog.Errorf("jwt error: %v\n", err)
+			return nil, errno.ServiceErr.WithMessage(err.Error())
 		}
 		// 校验信息
 		if claims.Id == 0 || claims.Issuer != global.Configs.JWT.Issuer || claims.Subject != global.Configs.JWT.Subject {
@@ -42,7 +45,8 @@ func (s *UserInfoService) UserInfo(req *user.InfoRequest) (*user.User, error) {
 			isFollow, err = mongo.GetFollowInfo(s.ctx, claims.Id, req.UserId)
 			//isFollow, err = cache.GetFollowState(s.ctx, claims.Id, req.UserId)
 			if err != nil {
-				return nil, err
+				klog.Errorf("mongo query error: %v\n", err)
+				return nil, errno.ServiceErr.WithMessage(err.Error())
 			}
 		}
 	}

@@ -3,12 +3,14 @@ package dal
 import (
 	"context"
 	"errors"
+	"github.com/cloudwego/kitex/pkg/klog"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/constant"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/dal/cache"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/dal/db"
 	"github.com/linzijie1998/mini-tiktok/cmd/user/global"
 	"github.com/linzijie1998/mini-tiktok/model"
 	"github.com/linzijie1998/mini-tiktok/pkg/errno"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -19,24 +21,33 @@ func QueryUserInfoById(ctx context.Context, uid int64) (*model.User, error) {
 	// 1. 空值缓存查询
 	if err := cache.GetUserInfoNullKey(ctx, uid); err == nil {
 		return nil, errno.UserNotRegisterErr
+	} else {
+		if !errors.Is(err, redis.Nil) {
+			klog.Errorf("redis query error: %v\n", err)
+			return nil, errno.ServiceErr.WithMessage(err.Error())
+		}
 	}
 	// 2. 基础信息查询
 	userInfo, err := cache.GetUserInfo(ctx, uid)
 	if err != nil {
-		// 缓存未命中
+		if !errors.Is(err, redis.Nil) {
+			klog.Errorf("redis query error: %v\n", err)
+		}
+		// 缓存未命中 or 缓存查询失败 -> 查询MySQL
 		userInfo, err = db.QueryUserInfoByID(ctx, uid, constant.UserBaseInfoQueryString)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				if errors.Is(err, gorm.ErrRecordNotFound) {
-					// 未找到该UID的用户, 设置空值缓存防止Redis缓存穿透
-					_ = cache.NewUserInfoNullKey(ctx, uid, global.ExpireDurationNullKey)
-					return nil, errno.UserNotRegisterErr
-				}
-				return nil, err
+				// 未找到该UID的用户, 设置空值缓存防止Redis缓存穿透
+				_ = cache.NewUserInfoNullKey(ctx, uid, global.ExpireDurationNullKey)
+				return nil, errno.UserNotRegisterErr
 			}
+			klog.Errorf("gorm query error: %v\n", err)
+			return nil, errno.ServiceErr.WithMessage(err.Error())
 		} else {
-			// 添加缓存信息（忽略错误信息）
-			_ = cache.NewUserInfos(ctx, []*model.User{userInfo}, global.ExpireDurationUserBaseInfo)
+			// 添加缓存信息
+			if err = cache.NewUserInfos(ctx, []*model.User{userInfo}, global.ExpireDurationUserBaseInfo); err != nil {
+				klog.Errorf("redis add error: %v\n", err)
+			}
 		}
 	}
 	if len(userInfo.Avatar) == 0 {
@@ -48,12 +59,17 @@ func QueryUserInfoById(ctx context.Context, uid int64) (*model.User, error) {
 	// 3. 计数信息查询
 	userCounter, err := cache.GetUserCounter(ctx, uid)
 	if err != nil {
+		if !errors.Is(err, redis.Nil) {
+			klog.Errorf("redis query error: %v\n", err)
+		}
 		userCounter, err = db.QueryUserInfoByID(ctx, uid, constant.UserCounterInfoQueryString)
 		if err != nil {
-			return nil, err
+			return nil, errno.ServiceErr.WithMessage(err.Error())
 		} else {
 			// 添加缓存信息（忽略错误信息）
-			_ = cache.NewUserCounters(ctx, []*model.User{userCounter})
+			if err = cache.NewUserCounters(ctx, []*model.User{userCounter}); err != nil {
+				klog.Errorf("redis add error: %v\n", err)
+			}
 		}
 	}
 	// 4. 合并基础信息和计数信息
