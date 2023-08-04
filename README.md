@@ -1,4 +1,4 @@
-# 极简版抖音
+# Mini-Tiktok 极简版抖音
 
 <div align=left>
 <img src="https://img.shields.io/badge/Golang-v1.19-blue"/>
@@ -7,15 +7,43 @@
 <img src="https://img.shields.io/badge/LICENSE-MIT-green"/>
 </div>
 
-基于微服务RPC框架Kitex和微服务HTTP框架Hertz的极简版抖音后端（第五届字节跳动后端青训营结营项目）
 
-## 一、项目结构
+
+## 一、基本介绍
+### 1.1 项目介绍
+**mini-tiktok**是一个基于微服务框架[Kitex](https://www.cloudwego.io/docs/kitex/)和HTTP框架[Hertz](https://www.cloudwego.io/docs/hertz/)开发的极简抖音后端项目; 您可以在[极简抖音App使用说明 - 青训营版](https://bytedance.feishu.cn/docs/doccnM9KkBAdyDhg8qaeGlIz7S7)中获取安卓APP下载链接; 所有接口及说明文档请参考[极简版抖音接口说明文档](https://apifox.com/apidoc/shared-09d88f32-0b6c-4157-9d07-a36d32d7a75c)；
+
+**本项目来自第五届[字节跳动青训营](https://youthcamp.bytedance.com/)后端专场，感谢字节跳动提供的技术学习和交流平台**
+
+### 1.2 技术栈
+
+- 本项目使用Go语言开发，采用了字节跳动开源的微服务RPC框架[Kitex](https://www.cloudwego.io/docs/kitex/)和HTTP框架[Hertz](https://www.cloudwego.io/docs/hertz/)；
+- 本项目使用[MySQL](https://www.mysql.com/)、[Redis](https://redis.io/)以及[MongoDB](https://www.mongodb.com/)作为数据库支持，并且使用[ETCD](https://etcd.io/)实现微服务的发现与注册；
+- 此外本项目还使用到了viper、gorm、jaeger等第三方库以及使用[nginx](http://nginx.org/en/index.html)提供文件访问服务。
+
+### 1.3 项目结构
+本项目将需求拆分为七个RPC服务、一个http的api接口以及一个静态资源访问的接口：
+
+| Service Name | Usage               | Framework   | protocol | Path         | IDL                 |
+|--------------|---------------------|-------------|----------|--------------|---------------------|
+| api          | 服务api的http接口        | kitex/hertz | http     | cmd/api      | -                   |
+| file-system  | 视频、封面等静态资源访问的http接口 | nginx       | http     | -            | -                   |
+| feed         | 视频流推送的逻辑处理          | kitex/gorm  | thrift   | cmd/feed     | idl/feed.thrift     |
+| publish      | 视频上传的逻辑处理           | kitex/gorm  | thrift   | cmd/publish  | idl/publish.thrift  |
+| comment      | 视频评论的逻辑处理           | kitex/gorm  | thrift   | cmd/comment  | idl/comment.thrift  |
+| favorite     | 视频点赞的逻辑处理           | kitex/gorm  | thrift   | cmd/favorite | idl/favorite.thrift |
+| user         | 用户数据的逻辑处理           | kitex/gorm  | thrift   | cmd/user     | idl/user.thrift     |
+| relation     | 用户关注的逻辑处理           | kitex/gorm  | thrift   | cmd/relation | idl/relation.thrift |
+| message      | 用户聊天的逻辑处理           | kitex/gorm  | thrift   | cmd/message  | idl/message.thrift  |
+
+项目整体架构：
+
+![overview](./image/overview.png)
+
+项目文件结构：
 ```
 ├── cmd: 
 │    ├── api: API访问接口
-│    │    ├── comment.go: 评论计数
-│    │    ├── favorite.go: 点赞计数及状态获取
-│    │    └── relation.go: 关注和粉丝计数及状态获取
 │    ├── comment：评论发布和查询相关微服务
 │    ├── favorite：视频点赞及列表相关微服务
 │    ├── feed：视频流推送微服务
@@ -32,14 +60,9 @@
 │    ├── publish.thrift：视频发布相关
 │    ├── relation.thrift：关注相关
 │    └── user.thrift：用户相关
-├── kitex_gen: 由kitex自动生成工具生成
+├── kitex_gen: 由kitex代码生成工具生成
 ├── model: 数据实体
-└── pkg: 工具
-     ├── constant: 保存一些常量
-     ├── errno: 错误信息
-     ├── ffmpeg: 视频封面截取
-     ├── path: 文件路径相关
-     └── jwt: JWT生成和解析
+└── pkg: 工具和组件
 ```
 
 ## 二、项目启动
